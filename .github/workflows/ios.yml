@@ -1,0 +1,56 @@
+# Builds the iOS app on a GitHub-hosted Mac: unit tests, simulator screenshots, and an .ipa
+# ready to sideload (e.g. with Sideloadly on Windows). No Mac is needed locally.
+name: iOS
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Xcode version
+        run: xcodebuild -version
+
+      - name: Generate Xcode project
+        run: |
+          brew install xcodegen
+          xcodegen generate
+
+      - name: Pick a simulator
+        id: sim
+        run: |
+          UDID=$(xcrun simctl list devices available -j | python3 scripts/pick_simulator.py)
+          echo "Using simulator $UDID"
+          echo "udid=$UDID" >> "$GITHUB_OUTPUT"
+
+      - name: Unit tests
+        run: |
+          mkdir -p build
+          set -o pipefail
+          xcodebuild test \
+            -project EmptyRoom.xcodeproj -scheme EmptyRoom \
+            -destination "id=${{ steps.sim.outputs.udid }}" \
+            -derivedDataPath build/sim 2>&1 | tee build/test.log \
+            | grep -E "error:|Test Case .*(passed|failed)|Executed|\*\* (TEST|BUILD)"
+
+      - name: Simulator screenshots
+        run: bash scripts/screenshots.sh "${{ steps.sim.outputs.udid }}"
+
+      - name: Build .ipa for sideloading
+        run: bash scripts/build_ipa.sh
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: EmptyRoom-iOS
+          path: |
+            build/EmptyRoom.ipa
+            build/screenshots
+            build/*.log
+          if-no-files-found: warn

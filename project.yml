@@ -1,0 +1,90 @@
+# Xcode project definition. The .xcodeproj is generated from this file by XcodeGen
+# (`xcodegen generate`), so the project can be edited without a Mac.
+name: EmptyRoom
+options:
+  bundleIdPrefix: com.csuft
+  deploymentTarget:
+    iOS: "16.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    MARKETING_VERSION: "1.0.2"
+    CURRENT_PROJECT_VERSION: "4"
+    TARGETED_DEVICE_FAMILY: "1"
+    # No team here: simulator builds sign locally, device builds are re-signed by the sideloader.
+    CODE_SIGN_STYLE: Manual
+    CODE_SIGN_IDENTITY: "-"
+    DEVELOPMENT_TEAM: ""
+targets:
+  EmptyRoom:
+    type: application
+    platform: iOS
+    sources:
+      - App
+      - Shared
+    info:
+      path: App/Info.plist
+      properties:
+        CFBundleDisplayName: 空教室速查
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        CFBundleURLTypes:
+          - CFBundleURLName: com.csuft.emptyroom
+            CFBundleURLSchemes: [emptyroom]
+        NSAppTransportSecurity:
+          NSAllowsArbitraryLoadsInWebContent: true
+    entitlements:
+      path: App/EmptyRoom.entitlements
+      properties:
+        com.apple.security.application-groups: [group.com.csuft.emptyroom]
+    dependencies:
+      - target: EmptyRoomWidget
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.csuft.emptyroom
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+  EmptyRoomWidget:
+    type: app-extension
+    platform: iOS
+    sources:
+      - Widget
+      - Shared
+    info:
+      path: Widget/Info.plist
+      properties:
+        CFBundleDisplayName: 空教室速查
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    entitlements:
+      path: Widget/EmptyRoomWidget.entitlements
+      properties:
+        com.apple.security.application-groups: [group.com.csuft.emptyroom]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.csuft.emptyroom.widget
+  EmptyRoomTests:
+    type: bundle.unit-test
+    platform: iOS
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: "YES"
+        PRODUCT_BUNDLE_IDENTIFIER: com.csuft.emptyroom.tests
+    # Tests compile the shared logic directly, so they need no host app.
+    sources:
+      - Tests
+      - path: Shared
+        excludes:
+          - WidgetMatrixView.swift
+schemes:
+  EmptyRoom:
+    build:
+      targets:
+        EmptyRoom: all
+    test:
+      targets:
+        - EmptyRoomTests

@@ -1,0 +1,45 @@
+# Codemagic build (used while GitHub Actions is unavailable on this account): same steps as
+# .github/workflows/ios.yml — generate the project, unit tests on a simulator, demo screenshots,
+# and an .ipa for sideloading.
+workflows:
+  ios:
+    name: iOS build, tests, screenshots, ipa
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    environment:
+      xcode: latest
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: main
+          include: true
+    scripts:
+      - name: Xcode version
+        script: xcodebuild -version
+      - name: Generate Xcode project
+        script: |
+          command -v xcodegen >/dev/null || brew install xcodegen
+          xcodegen generate
+      - name: Pick a simulator
+        script: |
+          UDID=$(xcrun simctl list devices available -j | python3 scripts/pick_simulator.py)
+          echo "Using simulator $UDID"
+          echo "SIM_UDID=$UDID" >> "$CM_ENV"
+      - name: Unit tests
+        script: |
+          mkdir -p build
+          set -o pipefail
+          xcodebuild test \
+            -project EmptyRoom.xcodeproj -scheme EmptyRoom \
+            -destination "id=$SIM_UDID" \
+            -derivedDataPath build/sim 2>&1 | tee build/test.log \
+            | grep -E "error:|Test Case .*(passed|failed)|Executed|\*\* (TEST|BUILD)"
+      - name: Simulator screenshots
+        script: bash scripts/screenshots.sh "$SIM_UDID"
+      - name: Build .ipa for sideloading
+        script: bash scripts/build_ipa.sh
+    artifacts:
+      - build/EmptyRoom.ipa
+      - build/screenshots/*.png
+      - build/*.log

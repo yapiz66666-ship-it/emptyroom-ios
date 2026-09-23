@@ -2,9 +2,8 @@
 # ready to sideload (e.g. with Sideloadly on Windows). No Mac is needed locally.
 name: iOS
 
+# Manual only while Actions is locked on this account; Codemagic (codemagic.yaml) builds on push.
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 
 jobs:

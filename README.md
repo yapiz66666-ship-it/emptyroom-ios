@@ -13,6 +13,8 @@
 
 构建产物在仓库的 Actions 页面 → 对应运行 → Artifacts → `EmptyRoom-iOS`。
 
+> 目前账号的 GitHub Actions 因账单问题被锁，改用 [Codemagic](https://codemagic.io)（`codemagic.yaml`，步骤相同），推送到 `main` 自动构建，产物在 Codemagic 的构建页面下载。GitHub Actions 暂时只能手动触发。
+
 ## 装到 iPhone（Windows 上用 Sideloadly）
 
 1. 装好 iTunes（微软商店版不行，要官网版）和 [Sideloadly](https://sideloadly.io/)
